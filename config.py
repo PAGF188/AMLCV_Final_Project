@@ -27,3 +27,14 @@ T1_CLASES = 2
 T1_BATCH = 32
 T1_EPOCHS = 3
 T1_LR = 1e-4
+
+#####################################
+# SINGLE TASK2 - LANDMARKS 
+#####################################
+T2_FOLDER = "task2"
+T2_NAME = os.path.join(T2_FOLDER, "single_task2.pt")
+T2_SIZE = (224, 224)
+T2_CLASES = 5*2
+T2_BATCH = 32
+T2_EPOCHS = 20
+T2_LR = 1e-3
