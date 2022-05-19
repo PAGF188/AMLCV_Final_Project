@@ -118,20 +118,24 @@ def visualice(model, testloader):
         preds = model(inputs)
         preds = preds.cpu().detach().numpy().astype(int)
 
-        print(labels)
-        print()
-        print(preds)
+        print(labels[0])
+        print(preds[0])
 
-        # lm = preds.reshape((-1,2))
-        # img = inputs[0].permute(1, 2, 0).cpu().numpy()[0]
-        # plt.imshow(img)
-        # plt.scatter(lm[0,0], lm[0,1], marker="<")
-        # plt.scatter(lm[1,0], lm[1,1], marker=">")
-        # plt.scatter(lm[2,0], lm[2,1], marker="^")
-        # plt.scatter(lm[3,0], lm[3,1], marker="3")
-        # plt.scatter(lm[4,0], lm[4,1], marker="4")
-        # plt.show()
+        # 1 EXAMPLE
+        preds = preds[0]
+        labels = labels[0]
 
+        lm = preds.reshape((-1,2))
+        img = inputs[0]
+        img = img.permute(1, 2, 0).cpu().numpy()
+        plt.imshow(img)
+        plt.scatter(lm[0,0], lm[0,1], marker="<")
+        plt.scatter(lm[1,0], lm[1,1], marker=">")
+        plt.scatter(lm[2,0], lm[2,1], marker="^")
+        plt.scatter(lm[3,0], lm[3,1], marker="3")
+        plt.scatter(lm[4,0], lm[4,1], marker="4")
+        plt.show()
+        plt.clf()
         if i==10:
             break
         i+=1
