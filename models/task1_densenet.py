@@ -2,7 +2,11 @@ import torchvision.models as models
 from torch import nn
 from config import *
 import time
+import numpy as np
+from sklearn.metrics import confusion_matrix, roc_curve, RocCurveDisplay
+import seaborn as sns
 import pdb
+import matplotlib.pyplot as plt
 
 def denseNet121_pretrained():
     # Pre-trained on ImageNET
@@ -58,10 +62,16 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=5):
 def eval_model(model, testloader, criterion):
     since = time.time()
     model.eval()   # Set model to evaluate mode
-
+    
+    # statistics
     running_loss = 0.0
     running_corrects = 0
+    total_values = np.array([])
+    total_preds = np.array([])
+    total_labels = np.array([])
+
     for inputs, labels in testloader:
+        total_labels = np.concatenate([total_labels, labels[0]])
         inputs = inputs.to(DEVICE)
         labels = labels[0].to(DEVICE)
 
@@ -69,14 +79,34 @@ def eval_model(model, testloader, criterion):
         with torch.set_grad_enabled(False):
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            _, preds = torch.max(outputs, 1)
-
+            values, preds = torch.max(outputs, 1)
+            total_values = np.concatenate([total_values, values.cpu()])
+            total_preds = np.concatenate([total_preds, preds.cpu()])
+        
         # statistics
         running_loss += loss.item() * inputs.size(0)
         running_corrects += torch.sum(preds == labels.data)
-    
+    time_elapsed = time.time() - since
+
     epoch_loss = running_loss / len(testloader.dataset)
     epoch_acc = running_corrects.double() / len(testloader.dataset)
+    mc = confusion_matrix(total_labels, total_preds)
+    fpr, tpr, _ = roc_curve(total_labels, total_values)
+    pdb.set_trace()
+    # TO SHOW CONFUSION MATRIX AS PLOT
+    fig, ax = plt.subplots(figsize=(10,10))
+    sns.heatmap(mc/np.sum(mc), cmap="Reds", annot=True, fmt = '.2%', square=1,   linewidth=2.)
+    plt.xlabel("predictions")
+    plt.ylabel("real values")
+    plt.show(); plt.clf()
+
+    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=0).plot()
+    plt.show()
+
+    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=1).plot()
+    plt.show()
+
     print('{} Loss: {:.4f} Acc: {:.4f}'.format('test', epoch_loss, epoch_acc))
-    time_elapsed = time.time() - since
     print('Test complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+
+
