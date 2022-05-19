@@ -20,7 +20,8 @@ TEST_SPLIT = 0.3
 #####################################
 # SINGLE TASK1 - GENDER CLASIFICATION 
 #####################################
-T1_NAME = "single_task1.pt"
+T1_FOLDER = "task1"
+T1_NAME = os.path.join(T1_FOLDER, "single_task1.pt")
 T1_SIZE = (224, 224)
 T1_CLASES = 2
 T1_BATCH = 32

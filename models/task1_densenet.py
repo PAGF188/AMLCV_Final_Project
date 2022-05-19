@@ -92,19 +92,19 @@ def eval_model(model, testloader, criterion):
     epoch_acc = running_corrects.double() / len(testloader.dataset)
     mc = confusion_matrix(total_labels, total_preds)
     fpr, tpr, _ = roc_curve(total_labels, total_values)
-    pdb.set_trace()
+    
     # TO SHOW CONFUSION MATRIX AS PLOT
-    fig, ax = plt.subplots(figsize=(10,10))
-    sns.heatmap(mc/np.sum(mc), cmap="Reds", annot=True, fmt = '.2%', square=1,   linewidth=2.)
-    plt.xlabel("predictions")
-    plt.ylabel("real values")
-    plt.show(); plt.clf()
+    g = sns.heatmap(mc/np.sum(mc), cmap="Reds", annot=True, fmt = '.2%', square=1,   linewidth=2.)
+    g.set_xticklabels(['0 (w)', '1 (m)'])
+    g.set_yticklabels(['0 (w)', '1 (m)'])
+    figure = g.get_figure()    
+    figure.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'cm.png', dpi=400)
 
     roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=0).plot()
-    plt.show()
+    plt.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'roc_0_w.png', dpi=400)
 
     roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=1).plot()
-    plt.show()
+    plt.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'roc_1_m.png', dpi=400)
 
     print('{} Loss: {:.4f} Acc: {:.4f}'.format('test', epoch_loss, epoch_acc))
     print('Test complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
