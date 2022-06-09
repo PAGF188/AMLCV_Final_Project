@@ -66,7 +66,6 @@ def eval_model(model, testloader, criterion):
     # statistics
     running_loss = 0.0
     running_corrects = 0
-    total_values = np.array([])
     total_preds = np.array([])
     total_labels = np.array([])
 
@@ -80,7 +79,6 @@ def eval_model(model, testloader, criterion):
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             values, preds = torch.max(outputs, 1)
-            total_values = np.concatenate([total_values, values.cpu()])
             total_preds = np.concatenate([total_preds, preds.cpu()])
         
         # statistics
@@ -91,7 +89,7 @@ def eval_model(model, testloader, criterion):
     epoch_loss = running_loss / len(testloader.dataset)
     epoch_acc = running_corrects.double() / len(testloader.dataset)
     mc = confusion_matrix(total_labels, total_preds)
-    fpr, tpr, _ = roc_curve(total_labels, total_values)
+    fpr, tpr, _ = roc_curve(total_labels, total_preds)
     
     # TO SHOW CONFUSION MATRIX AS PLOT
     g = sns.heatmap(mc/np.sum(mc), cmap="Reds", annot=True, fmt = '.2%', square=1,   linewidth=2.)

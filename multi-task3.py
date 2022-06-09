@@ -1,7 +1,7 @@
 """
-Single-task 2 : Eyes, mouse and nose landmark location. 
-Train and evaluate a baseline network that, given a face image, predicts  the (x,y) coordinates, 
-in the image, of the left eye, the right eye, mouse left, mouse right and the nose.
+Multi-task 3 : Clasification and eyes, mouse and nose landmark location. 
+Train and evaluate a baseline network that, given a face image, predicts
+both the gender and the eyes and nose location.
 
 Author: Pablo Garcia Fernnadez
 """
@@ -11,9 +11,10 @@ from utils.celebamini import CelebAMini
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from utils.visualization import plot_dataset_examples
-from models.task2_densenet import *
+from models.task3_densenet import *
+import pdb
 
-def single_task2():
+def multi_task3():
     # 1) CREATE DATALOADERS
     print("1) Creating DATALOADERS")
     basic_transforms =  transforms.Compose([
@@ -34,26 +35,27 @@ def single_task2():
 
     # 2) CREATE MODEL
     print("1) Creating DENSENET MODEL")
-    model = task2_denseNet121_pretrained()
+    model = MULTITASK()
     model = model.to(DEVICE)
     print(model)
 
-    if os.path.isfile(os.path.join(MODEL_SAVE_DIR, T2_NAME)):
+    if os.path.isfile(os.path.join(MODEL_SAVE_DIR, T3_NAME)):
         print(f"MODEL is already trained!! ")
-        model.load_state_dict(torch.load(os.path.join(MODEL_SAVE_DIR, T2_NAME)))
+        model.load_state_dict(torch.load(os.path.join(MODEL_SAVE_DIR, T3_NAME)))
     else:
         print(f"Training MODEL...")
-        optimizer = torch.optim.Adam(model.parameters(), lr=T2_LR)
-        criterion = torch.nn.MSELoss()
-        model = train_model(model, dataloaders_dict, criterion, optimizer, num_epochs=T2_EPOCHS)
-        torch.save(model.state_dict(), os.path.join(MODEL_SAVE_DIR, T2_NAME))
+        optimizer = torch.optim.Adam(model.parameters(), lr=T3_LR)
+        criterion_clas = torch.nn.CrossEntropyLoss()
+        criterion_reg = torch.nn.MSELoss()
+        model = train_model(model, dataloaders_dict, criterion_clas, criterion_reg, optimizer, num_epochs=T3_EPOCHS)
+        torch.save(model.state_dict(), os.path.join(MODEL_SAVE_DIR, T3_NAME))
 
     # 3) TEST RESULTS
-    eval_model(model, dataloaders_dict['test'])
-    visualice(model, dataloaders_dict['test'])
+    #eval_model(model, dataloaders_dict['test'], torch.nn.MSELoss())
+    #visualice(model, dataloaders_dict['test'])
 
 
 
 if __name__ == "__main__":
-    print("SINGLE TASK2: LANDMARK LOCATION!!! \n")
-    single_task2()
+    print("MULTI TASK3: CLASSIFICATION AND REGRESSION !!! \n")
+    multi_task3()

@@ -11,6 +11,7 @@ import pandas
 import pdb
 from config import *
 from sklearn.model_selection import train_test_split
+import pdb
 
 class CelebAMini(VisionDataset):
     """
@@ -46,7 +47,7 @@ class CelebAMini(VisionDataset):
     
     def __init__(self, root, 
                  transform = None,
-                 target_transform = None, split="train") :
+                 target_transform = None, split="train", s_f=1) :
         super(CelebAMini,self).__init__(root, transform=transform, 
                                         target_transform=target_transform)
         
@@ -78,7 +79,9 @@ class CelebAMini(VisionDataset):
             this_path = os.path.join(self.img_path, f)
             if not os.path.isfile(this_path):
                 raise RuntimeError(f"Dataset corruption: Image '{this_path}' not found.")
-    
+        # SCALE FACTOR
+        self.s_f = s_f
+
     def __len__(self):
         return len(self.filename)
     
@@ -89,10 +92,15 @@ class CelebAMini(VisionDataset):
             X = self.transform(X)
         
         T = (self.gender[index], self.landmarks[index,:])
-        
         if self.target_transform is not None:
-            T = self.transform(T)
-            
+            T_reg = self.transform(T_reg)
+
+        # Adaptar coordenadas de regresion al resize de la imagen:
+        T_reg = T[1].reshape((-1,2))
+        T_reg = (T_reg * self.s_f).long()
+        T_reg = T_reg.reshape(-1)
+        T = (T[0], T_reg)
+
         return X,T
                            
     
