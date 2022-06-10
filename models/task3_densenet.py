@@ -62,7 +62,7 @@ def train_model(model, dataloaders, criterion_class, criterion_reg, optimizer, n
                 loss_cls = criterion_class(preds_class, labels_class)
                 loss_reg = criterion_reg(preds_reg, labels_reg)
                 
-                loss = loss_cls + loss_reg
+                loss = 3 * loss_cls + loss_reg
 
                 loss.backward()
                 optimizer.step()
@@ -80,54 +80,58 @@ def train_model(model, dataloaders, criterion_class, criterion_reg, optimizer, n
     return model
 
 
-def eval_model(model, testloader, criterion):
+def eval_model(model, testloader):
+    criterion = torch.nn.MSELoss()
     since = time.time()
     model.eval()   # Set model to evaluate mode
     
     # statistics
-    running_loss = 0.0
+    running_MSE = 0.0
     running_corrects = 0
     total_values = np.array([])
     total_preds = np.array([])
-    total_labels = np.array([])
+    total_labels_class = np.array([])
 
     for inputs, labels in testloader:
-        total_labels = np.concatenate([total_labels, labels[0]])
+        total_labels_class = np.concatenate([total_labels_class, labels[0]])
+        
         inputs = inputs.to(DEVICE)
-        labels = labels[0].to(DEVICE)
+
+        labels_class = labels[0].to(DEVICE)    # Get only the gender information
+        labels_reg = labels[1].to(DEVICE).float()  # Landmark labels
 
         # forward
         with torch.set_grad_enabled(False):
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            values, preds = torch.max(outputs, 1)
-            total_values = np.concatenate([total_values, values.cpu()])
+            preds_class, preds_reg = model(inputs)
+            loss = criterion(preds_reg, labels_reg)   # Calculo de RMSE para regresion
+            _, preds = torch.max(preds_class, 1)
             total_preds = np.concatenate([total_preds, preds.cpu()])
         
         # statistics
-        running_loss += loss.item() * inputs.size(0)
-        running_corrects += torch.sum(preds == labels.data)
+        running_MSE += loss.item() * inputs.size(0)
+        running_corrects += torch.sum(preds == labels_class.data)
     time_elapsed = time.time() - since
 
-    epoch_loss = running_loss / len(testloader.dataset)
-    epoch_acc = running_corrects.double() / len(testloader.dataset)
-    mc = confusion_matrix(total_labels, total_preds)
-    fpr, tpr, _ = roc_curve(total_labels, total_values)
+    MSE = running_MSE / len(testloader.dataset)
+    RMSE = np.sqrt(MSE)
+    ACC = running_corrects.double() / len(testloader.dataset)
+    mc = confusion_matrix(total_labels_class, total_preds)
+    fpr, tpr, _ = roc_curve(total_labels_class, total_preds)
     
     # TO SHOW CONFUSION MATRIX AS PLOT
     g = sns.heatmap(mc/np.sum(mc), cmap="Reds", annot=True, fmt = '.2%', square=1,   linewidth=2.)
     g.set_xticklabels(['0 (w)', '1 (m)'])
     g.set_yticklabels(['0 (w)', '1 (m)'])
     figure = g.get_figure()    
-    figure.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'cm.png', dpi=400)
+    figure.savefig(os.path.join(MODEL_SAVE_DIR, T3_FOLDER) + 'cm.png', dpi=400)
 
     roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=0).plot()
-    plt.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'roc_0_w.png', dpi=400)
+    plt.savefig(os.path.join(MODEL_SAVE_DIR, T3_FOLDER) + 'roc_0_w.png', dpi=400)
 
     roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr, pos_label=1).plot()
-    plt.savefig(os.path.join(MODEL_SAVE_DIR, T1_FOLDER) + 'roc_1_m.png', dpi=400)
+    plt.savefig(os.path.join(MODEL_SAVE_DIR, T3_FOLDER) + 'roc_1_m.png', dpi=400)
 
-    print('{} Loss: {:.4f} Acc: {:.4f}'.format('test', epoch_loss, epoch_acc))
+    print('{} Acc: {:.4f} RMSE: {:.4f}'.format('test', ACC, RMSE))
     print('Test complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
 

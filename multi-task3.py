@@ -51,7 +51,7 @@ def multi_task3():
         torch.save(model.state_dict(), os.path.join(MODEL_SAVE_DIR, T3_NAME))
 
     # 3) TEST RESULTS
-    #eval_model(model, dataloaders_dict['test'], torch.nn.MSELoss())
+    eval_model(model, dataloaders_dict['test'])
     #visualice(model, dataloaders_dict['test'])
 
 

@@ -47,5 +47,5 @@ T3_FOLDER = "task3"
 T3_NAME = os.path.join(T3_FOLDER, "multi_task3.pt")
 T3_SIZE = (224, 224)
 T3_BATCH = 32
-T3_EPOCHS = 10
+T3_EPOCHS = 50
 T3_LR = 1e-3
